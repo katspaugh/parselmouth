@@ -1,6 +1,6 @@
 'use strict';
 
-function loop(callback, msPerFrame) {
+function loop(callback) { // TODO: frame cycle
     var requestFrame = (
         window.requestAnimationFrame ||
         window.webkitRequestAnimationFrame ||
@@ -23,33 +23,36 @@ function init() {
         x: ~~(w / unit) * unit,
         y: ~~(h / unit) * unit
     };
-    var snake = new Snake(maxPoint, unit);
     var drawer = new Drawer(maxPoint, unit);
-    var dir = { x: snake.direction.x, y: snake.direction.y };
-    var tail;
+    var snake, dir, tail, gameover;
+
+    var init = function () {
+        snake = new Snake(maxPoint, unit);
+        dir = { x: snake.direction.x, y: snake.direction.y };
+        tail = snake.tail.slice();
+        gameover = false;
+    };
+
+    init();
 
     loop(function () {
-        if (snake.direction.x != -dir.x || snake.direction.y != -dir.y) {
-            snake.direction.x = dir.x;
-            snake.direction.y = dir.y;
+        snake.setDirection(dir);
+
+        if (frameCycle == 0) {
+            tail = snake.tail.slice();
+            gameover = snake.update();
         }
 
-        if (0 == frameCycle) {
-            tail = snake.tail.slice();
-            var ok = snake.update();
+        drawer.clear();
+        drawer.drawApple(snake.apple);
+        drawer.drawSnakeFrame(tail, snake.tail, frameCycle, framesPerMove);
 
-            if (!ok) {
-                if (confirm('Gameover! Play again?')) {
-                    snake = new Snake(maxPoint, unit);
-                    tail = snake.tail.slice();
-                } else {
-                    return false;
-                }
+        if (gameover && frameCycle == framesPerMove - 1) {
+            if (confirm('Gameover! Play again?')) {
+                init();
+            } else {
+                return false;
             }
-        } else {
-            drawer.clear();
-            drawer.drawApple(snake.apple);
-            drawer.drawSnakeFrame(tail, snake.tail, frameCycle, framesPerMove);
         }
 
         frameCycle = (frameCycle + 1) % framesPerMove;
@@ -79,4 +82,3 @@ function bindKeys(callback) {
 }
 
 document.addEventListener('DOMContentLoaded', init);
-//document.addEventListener('click', init);

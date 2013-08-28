@@ -2,6 +2,7 @@
 
 function Snake(maxPoint, unit) {
     this.direction = { x: -1, y: 0 };
+    this.prevDir = {};
     this.maxPoint = maxPoint;
     this.unit = unit;
     this.tail = [{
@@ -25,7 +26,6 @@ Snake.prototype.findApple = function () {
 };
 
 Snake.prototype.border = function () {
-    return false; // FIXME
     var head = this.tail[0];
     var mP = this.maxPoint;
     return head.x < 0 || head.y < 0 ||  head.x >= mP.x || head.y >= mP.y;
@@ -43,23 +43,13 @@ Snake.prototype.canEat = function (apple) {
 Snake.prototype.move = function () {
     var x = this.tail[0].x + this.direction.x * this.unit;
     var y = this.tail[0].y + this.direction.y * this.unit;
-
-    // FIXME
-    if (x < 0) {
-        x = this.maxPoint.x;
-    } else if (x >= this.maxPoint.x) {
-        x = 0;
-    }
-    if (y < 0) {
-        y = this.maxPoint.y;
-    } else if (y >= this.maxPoint.y) {
-        y = 0;
-    }
-
     this.tail.unshift({ x: x, y: y });
 };
 
 Snake.prototype.update = function () {
+    this.prevDir.x = this.direction.x;
+    this.prevDir.y = this.direction.y;
+
     this.move();
 
     if (this.canEat(this.apple)) {
@@ -68,5 +58,12 @@ Snake.prototype.update = function () {
         this.tail.pop();
     }
 
-    return !(this.border() || this.tail.some(this.collide, this));
+    return this.border() || this.tail.some(this.collide, this);
+};
+
+Snake.prototype.setDirection = function (dir) {
+    if (this.prevDir.x != -dir.x || this.prevDir.y != -dir.y) {
+        this.direction.x = dir.x;
+        this.direction.y = dir.y;
+    }
 };

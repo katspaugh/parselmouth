@@ -21,37 +21,35 @@ Drawer.prototype.clear = function () {
 };
 
 Drawer.prototype.drawApple = function (point) {
-    this.ctx.fillStyle = 'red';
-    this.drawUnit(point);
-};
-
-Drawer.prototype.drawUnit = function (point) {
-    this.ctx.fillRect(point.x, point.y, this.unit, this.unit);
+    var r = this.unit / 2;
+    var x = point.x;
+    var y = point.y;
+    var rad = this.ctx.createRadialGradient(x, y, 1, x, y, r);
+    rad.addColorStop(0.5, 'yellow');
+    rad.addColorStop(1.0, 'red');
+    this.ctx.fillStyle = rad;
+    this.ctx.beginPath();
+    this.ctx.arc(point.x + r, point.y + r, r, 0, Math.PI * 2, false);
+    this.ctx.fill();
 };
 
 Drawer.prototype.ease = function (t, b, c, d) {
-    // return c*t/d+b;
-    t /= d/2;
-    if (t < 1) return c/2*t*t + b;
-    t--;
-    return -c/2 * (t*(t-2) - 1) + b;
+    return c * t / d + b;
 };
 
 Drawer.prototype.drawSnakeFrame = function (pointsA, pointsB, frame, frames) {
-    this.ctx.fillStyle = 'green';
-
     pointsA.forEach(function (pA, index) {
         var pB = pointsB[index];
-
-        var x = pA.x;
-        var y = pA.y;
-        if (x != pB.x) {
-            x = this.ease(frame, x, pB.x - x, frames + 1);
+        var dx = pB.x - pA.x;
+        var dy = pB.y - pA.y;
+        var x = pA.x, y = pA.y;
+        if (dx) {
+            x = this.ease(frame, x, dx, frames);
         }
-        if (y != pB.y) {
-            y = this.ease(frame, y, pB.y - y, frames + 1);
+        if (dy) {
+            y = this.ease(frame, y, dy, frames);
         }
-
-        this.drawUnit({ x: x, y: y });
+        this.ctx.fillStyle = 'green';
+        this.ctx.fillRect(x, y, this.unit, this.unit);
     }, this);
 };
