@@ -21,16 +21,8 @@ Drawer.prototype.clear = function () {
 };
 
 Drawer.prototype.drawApple = function (point) {
-    var r = this.unit / 2;
-    var x = point.x;
-    var y = point.y;
-    var rad = this.ctx.createRadialGradient(x, y, 1, x, y, r);
-    rad.addColorStop(0.5, 'yellow');
-    rad.addColorStop(1.0, 'red');
-    this.ctx.fillStyle = rad;
-    this.ctx.beginPath();
-    this.ctx.arc(point.x + r, point.y + r, r, 0, Math.PI * 2, false);
-    this.ctx.fill();
+    this.ctx.fillStyle = 'red';
+    this.ctx.fillRect(point.x, point.y, this.unit, this.unit);
 };
 
 Drawer.prototype.drawSnake = function (points, direction) {
@@ -44,7 +36,7 @@ Drawer.prototype.drawSnake = function (points, direction) {
     var dotSize = this.unit / 10;
     var a1 = (this.unit / 2) - dotSize;
     var a2 = (this.unit / 2) + dotSize;
-    var b1 = dotSize * 2;
+    var b1 = dotSize * 3;
     var b2 = this.unit - b1;
     var x1, y1, x2, y2;
     var p = points[0];

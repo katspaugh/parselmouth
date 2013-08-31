@@ -38,8 +38,6 @@ function init() {
             } else {
                 return false;
             }
-        } else {
-            document.title = 'Parcelmouth | Apples: ' + snake.getTailLength();
         }
 
         return true;
