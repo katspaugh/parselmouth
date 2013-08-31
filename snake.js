@@ -1,18 +1,30 @@
 'use strict';
 
-function Snake(maxPoint, unit) {
-    this.direction = { x: -1, y: 0 };
-    this.prevDir = {};
+function Snake(maxPoint, unit, speed) {
+    this.initialLength = 3;
     this.maxPoint = maxPoint;
     this.unit = unit;
+    this.gain = unit / speed;
+    this.direction = this.LEFT;
     this.tail = [{
-        x: ~~((maxPoint.x / unit) / 2) * unit,
-        y: ~~((maxPoint.y / unit) / 2) * unit
+        x: this.round(maxPoint.x / 2),
+        y: this.round(maxPoint.y / 2),
+        direction: { x: this.direction.x, y: this.direction.y }
     }];
-    this.move();
-    this.move();
+    for (var i = 0; i < this.initialLength - 1; i++) {
+        this.grow();
+    }
     this.apple = this.findApple();
 }
+
+Snake.prototype.LEFT = { x: -1, y: 0 };
+Snake.prototype.RIGHT = { x: 1, y: 0 };
+Snake.prototype.UP = { x: 0, y: -1 };
+Snake.prototype.DOWN = { x: 0, y: 1 };
+
+Snake.prototype.getTailLength = function () {
+    return this.tail.length - this.initialLength;
+};
 
 Snake.prototype.findApple = function () {
     var $ = this.unit;
@@ -25,45 +37,96 @@ Snake.prototype.findApple = function () {
     return apple;
 };
 
-Snake.prototype.border = function () {
-    var head = this.tail[0];
-    var mP = this.maxPoint;
-    return head.x < 0 || head.y < 0 ||  head.x >= mP.x || head.y >= mP.y;
+Snake.prototype.round = function (val) {
+    return Math.round(val / this.unit) * this.unit;
 };
 
 Snake.prototype.collide = function (point) {
     var p = this.tail[0];
-    return p != point && p.x == point.x && p.y == point.y;
+    return p != point &&
+        Math.round(p.x) == Math.round(point.x) &&
+        Math.round(p.y) == Math.round(point.y);
 };
 
 Snake.prototype.canEat = function (apple) {
     return this.collide(apple);
 };
 
-Snake.prototype.move = function () {
-    var x = this.tail[0].x + this.direction.x * this.unit;
-    var y = this.tail[0].y + this.direction.y * this.unit;
-    this.tail.unshift({ x: x, y: y });
+Snake.prototype.steer = function (dir) {
+    var first = this.tail[0];
+    if (dir.x != -first.direction.x && dir.y != first.direction.y) {
+        this.direction = dir;
+    }
 };
 
-Snake.prototype.update = function () {
-    this.prevDir.x = this.direction.x;
-    this.prevDir.y = this.direction.y;
+Snake.prototype.move = function () {
+    this.tail.forEach(function (part) {
+        part.x += part.direction.x * this.gain;
+        part.y += part.direction.y * this.gain;
+    }, this);
+};
 
+Snake.prototype.wrap = function () {
+    this.tail.forEach(function (part) {
+        var x = this.round(part.x);
+        var y = this.round(part.y);
+
+        if (x < 0) {
+            part.x = this.maxPoint.x - this.unit;
+        } else if (x + this.unit > this.maxPoint.x) {
+            part.x = -this.unit;
+        }
+        if (y < 0) {
+            part.y = this.maxPoint.y - this.unit;
+        } else if (y + this.unit > this.maxPoint.y) {
+            part.y = -this.unit;
+        }
+    }, this);
+};
+
+Snake.prototype.setDirections = function () {
+    for (var i = this.tail.length - 1; i > 0; i--) {
+        var part = this.tail[i];
+        var next = this.tail[i - 1];
+        part.direction.x = next.direction.x;
+        part.direction.y = next.direction.y;
+    }
+    var first = this.tail[0];
+    first.direction.x = this.direction.x;
+    first.direction.y = this.direction.y;
+};
+
+Snake.prototype.grow = function () {
+    var last = this.tail[this.tail.length - 1];
+    this.tail.push({
+        x: last.x - this.unit * last.direction.x,
+        y: last.y - this.unit * last.direction.y,
+        direction: {
+            x: last.direction.x,
+            y: last.direction.y
+        }
+    });
+};
+
+Snake.prototype.update = function (dir) {
     this.move();
 
+    var first = this.tail[0];
+    if (
+        Math.round(first.x) % this.unit != 0 ||
+        Math.round(first.y) % this.unit != 0
+    ) {
+        return;
+    }
+    this.wrap();
+    this.setDirections();
+
     if (this.canEat(this.apple)) {
+        this.grow();
         this.apple = this.findApple();
-    } else {
-        this.tail.pop();
     }
 
-    return this.border() || this.tail.some(this.collide, this);
-};
-
-Snake.prototype.setDirection = function (dir) {
-    if (this.prevDir.x != -dir.x || this.prevDir.y != -dir.y) {
-        this.direction.x = dir.x;
-        this.direction.y = dir.y;
+    if (this.tail.some(this.collide, this)) {
+        return 'gameover';
     }
 };

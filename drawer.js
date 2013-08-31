@@ -33,23 +33,47 @@ Drawer.prototype.drawApple = function (point) {
     this.ctx.fill();
 };
 
-Drawer.prototype.ease = function (t, b, c, d) {
-    return c * t / d + b;
-};
-
-Drawer.prototype.drawSnakeFrame = function (pointsA, pointsB, frame, frames) {
-    pointsA.forEach(function (pA, index) {
-        var pB = pointsB[index];
-        var dx = pB.x - pA.x;
-        var dy = pB.y - pA.y;
-        var x = pA.x, y = pA.y;
-        if (dx) {
-            x = this.ease(frame, x, dx, frames);
-        }
-        if (dy) {
-            y = this.ease(frame, y, dy, frames);
-        }
+Drawer.prototype.drawSnake = function (points, direction) {
+    points.forEach(function (point) {
+        var x = Math.round(point.x);
+        var y = Math.round(point.y);
         this.ctx.fillStyle = 'green';
         this.ctx.fillRect(x, y, this.unit, this.unit);
     }, this);
+
+    var dotSize = this.unit / 10;
+    var a1 = (this.unit / 2) - dotSize;
+    var a2 = (this.unit / 2) + dotSize;
+    var b1 = dotSize * 2;
+    var b2 = this.unit - b1;
+    var x1, y1, x2, y2;
+    var p = points[0];
+    var dir = p.direction;
+
+    // TODO: learn linear algebra
+    if (dir.x == -1) {
+        x1 = b1;
+        y1 = a1;
+        x2 = b1;
+        y2 = a2;
+    } else if (dir.x == 1) {
+        x1 = b2;
+        y1 = a1;
+        x2 = b2;
+        y2 = a2;
+    } else if (dir.y == -1) {
+        x1 = a1;
+        y1 = b1;
+        x2 = a2;
+        y2 = b1;
+    } else if (dir.y == 1) {
+        x1 = a1;
+        y1 = b2;
+        x2 = a2;
+        y2 = b2;
+    }
+
+    this.ctx.fillStyle = 'yellow';
+    this.ctx.fillRect(p.x + x1, p.y + y1, dotSize, dotSize);
+    this.ctx.fillRect(p.x + x2, p.y + y2, dotSize, dotSize);
 };
